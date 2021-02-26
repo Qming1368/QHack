@@ -33,7 +33,7 @@ classical_model = '512_nq_2'     # Possible choices: '512_2','512_nq_2','551_512
 step = 0.0004                    # Learning rate
 batch_size = 4                  # Number of samples for each training step
 num_epochs = 100                 # Number of training epochs
-q_depth = 1                      # Depth of the quantum circuit (number of variational layers)
+q_depth = 2                      # Depth of the quantum circuit (number of variational layers)
 gamma_lr_scheduler = 0.1        # Learning rate reduction applied every 10 epochs.
 max_layers = 15                  # Keep 15 even if not all are used.
 q_delta = 0.01                   # Initial spread of random quantum weights
@@ -41,7 +41,7 @@ q_delta = 0.01                   # Initial spread of random quantum weights
 #start_time = time.time()         # Start of the computation timer
 
 dev = qml.device('default.qubit', wires=n_qubits)
-#dev = qml.device('qiskit.aer', wires=n_qubits)
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 data_transforms = {
@@ -62,7 +62,7 @@ data_transforms = {
     ]),
 }
 
-data_dir = 'data/Brain-Tumor_2_class'
+data_dir = 'data/Chessman-image-dataset2'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                      data_transforms[x]) for x in ['train', 'val']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
@@ -159,7 +159,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs):
         since = time.time()
         now = datetime.now()
         #experiment_dir = 'runs/brain_tumor/default.qubit/QNN_depth1_eng/resnet18/' + now.strftime("%Y%m%d-%H%M%S") + "/"
-        experiment_dir = 'runs/brain_tumor/CNN_nq_norelu/resnet18/' + now.strftime("%Y%m%d-%H%M%S") + "/"
+        experiment_dir = 'runs/chessman/CNN/resnet18/' + now.strftime("%Y%m%d-%H%M%S") + "/"
         if not os.path.exists(experiment_dir):
             os.makedirs(experiment_dir)
         writer = SummaryWriter(experiment_dir)
@@ -291,7 +291,6 @@ for i in range(5):
     test_loss+=best_loss
     test_acc+=best_acc
 
-print('test_loss:',test_loss)
-print('test_acc:',test_acc)
+
 print('test_loss_avg:',test_loss/5)
 print('test_acc_avg:',test_acc/5)

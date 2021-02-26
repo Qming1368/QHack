@@ -10,6 +10,7 @@ from tensorboardX import SummaryWriter
 # Pennylane
 import pennylane as qml
 from pennylane import numpy as np
+from pennylane.init import strong_ent_layers_uniform
 
 # Other tools
 import time
@@ -19,14 +20,14 @@ from datetime import datetime
 
 
 
-n_qubits = 4                     # Number of qubits
+n_qubits = 4                    # Number of qubits
 quantum = True              # If set to "False", the dressed quantum circuit is replaced by
                                  # An enterily classical net (defined by the next parameter).
 classical_model = '512_2'     # Possible choices: '512_2','512_nq_2','551_512_2'.
 step = 0.0004                    # Learning rate
 batch_size = 4                  # Number of samples for each training step
 num_epochs = 100                 # Number of training epochs
-q_depth = 1                      # Depth of the quantum circuit (number of variational layers)
+q_depth = 2                      # Depth of the quantum circuit (number of variational layers)
 gamma_lr_scheduler = 0.1        # Learning rate reduction applied every 10 epochs.
 max_layers = 15                  # Keep 15 even if not all are used.
 q_delta = 0.01                   # Initial spread of random quantum weights
@@ -34,6 +35,7 @@ q_delta = 0.01                   # Initial spread of random quantum weights
 start_time = time.time()         # Start of the computation timer
 
 dev = qml.device('default.qubit', wires=n_qubits)
+#print('1000')
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -55,7 +57,7 @@ data_transforms = {
     ]),
 }
 
-data_dir = 'data/Brain-Tumor_2_class'
+data_dir = 'data/Chessman-image-dataset2'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                      data_transforms[x]) for x in ['train', 'val']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
@@ -122,7 +124,7 @@ class Quantumnet(nn.Module):
             super().__init__()
             self.pre_net = nn.Linear(512, n_qubits)
             self.q_params = nn.Parameter(q_delta * torch.randn(max_layers * n_qubits))
-
+            #self.q_params = nn.Parameter(weights)
             self.post_net = nn.Linear(n_qubits, 2)
 
         def forward(self, input_features):
@@ -150,8 +152,8 @@ class Quantumnet(nn.Module):
 def train_model(model, criterion, optimizer, scheduler, num_epochs):
         since = time.time()
         now = datetime.now()
-        #experiment_dir = 'runs/brain_tumor/default.qubit/QNN_depth1_eng/resnet18/' + now.strftime("%Y%m%d-%H%M%S") + "/"
-        experiment_dir = 'runs/brain_tumor/CNN/resnet18/' + now.strftime("%Y%m%d-%H%M%S") + "/"
+        experiment_dir = 'runs/chessman/resnet18/' + now.strftime("%Y%m%d-%H%M%S") + "/"
+
         if not os.path.exists(experiment_dir):
             os.makedirs(experiment_dir)
         writer = SummaryWriter(experiment_dir)
@@ -283,7 +285,6 @@ for i in range(5):
     test_loss+=best_loss
     test_acc+=best_acc
 
-print('test_loss:',test_loss)
-print('test_acc:',test_acc)
+
 print('test_loss_avg:',test_loss/5)
 print('test_acc_avg:',test_acc/5)
